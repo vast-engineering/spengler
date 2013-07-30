@@ -1,81 +1,99 @@
 package com.vast.xml
 
-import play.api.libs.iteratee._
-import play.api.libs.iteratee.Input.EOF
-import com.vast.xml.Combinators._
-import scala.concurrent.{ExecutionContext, Future}
-import scala.Predef._
+import com.vast.util.iteratee._
+import Combinators._
+import com.typesafe.scalalogging.slf4j.Logging
+import scala.util.control.NonFatal
 
-object ObjectParser {
+object ObjectParser extends Logging {
 
   import Iteratees._
 
-  def required[A](it: Iteratee[XMLEvent, Option[A]])(implicit ec: ExecutionContext) = {
+  def required[A](it: Iteratee[XMLEvent, Option[A]]) = {
     it.flatMap { value =>
-      value.map(Done[XMLEvent, A](_)).getOrElse(Error("Missing or blank required value.", Input.Empty))
+      value.map(Done[XMLEvent, A](_)).getOrElse(Error(new IterateeException("Missing or blank required value."), Input.Empty))
     }
   }
 
-  def xmlString(implicit ec: ExecutionContext) = textOnly
+  def xmlString = textOnly
 
-  def xmlNumber(implicit ec: ExecutionContext) = textOnly.flatMap { numberOpt =>
+  def xmlNumber = textOnly.flatMap { numberOpt =>
     try {
       Done(numberOpt.map(x => BigDecimal(x)))
     } catch {
-      case e: NumberFormatException => Error(s"Unable to parse $numberOpt into a number.", Input.Empty)
+      case e: NumberFormatException => Error(new IterateeException(s"Unable to parse $numberOpt into a number.", e), Input.Empty)
     }
   }
 
   def xmlObject[A, V](elementsAggregator: Iteratee[V, A],
-                      elementHandlerProducer: (String, Map[String, String]) => Option[Iteratee[XMLEvent, V]])(implicit ec: ExecutionContext): Iteratee[XMLEvent, A] =
+                      elementHandlerProducer: (String, Map[String, String]) => Option[Iteratee[XMLEvent, V]]): Iteratee[XMLEvent, A] =
     for {
       _ <- expectStartElement
       _ <- skipNonElement
-      elements <- peekOne.flatMap {
-        case EndElement(_) =>
+      elements <- takeOne[XMLEvent].flatMap {
+        case x@EndElement(name) =>
           //if we've reached the end element, run the elementsHandler iteratee to extract the result value
-          drop(1).flatMap(_ => Iteratee.flatten(extractValue(elementsAggregator).map(a => Done[XMLEvent, A](a))))
-        case x: StartElement =>
+          elementsAggregator.run.map(a => Done[XMLEvent, A](a)).recover({case NonFatal(e) => Error[XMLEvent](e, Input.Empty)}).get
+        case x@StartElement(name, attrs) =>
           //not done yet - parse the element
-          childElements(elementsAggregator, elementHandlerProducer)
-        case x => Error(s"Expected StartElement or EndElement, but got $x instead.", Input.Empty)
+          childElements(elementsAggregator, elementHandlerProducer).feed(Input.El(x))
+        case x => Error[XMLEvent](new IterateeException(s"Expected StartElement or EndElement, but got $x instead."), Input.Empty)
       }
     } yield elements
 
   private[this] def childElements[A, V](elementsAggregator: Iteratee[V, A],
-                                        elementHandlerProducer: (String, Map[String, String]) => Option[Iteratee[XMLEvent, V]])(implicit ec: ExecutionContext): Iteratee[XMLEvent, A] =
+                                        elementHandlerProducer: (String, Map[String, String]) => Option[Iteratee[XMLEvent, V]]): Iteratee[XMLEvent, A] =
     for {
       _ <- skipNonElement
       fedAggregator <- {
-        peekOne.flatMap {
-          case StartElement(name, attrs) =>
-            elementHandlerProducer(name, attrs).map { handler =>
-              handler.map(parsed => Iteratee.flatten(elementsAggregator.feed(Input.El(parsed))))
-            } getOrElse {
-              //if there's no handler, consume the element and just return the existing aggregator
-              consumeElement.map(consumed => elementsAggregator)
-            }
-          case x => Error(s"Expected StartElement, got $x instead", Input.Empty)
+        childElement(elementHandlerProducer).map { childValueOpt =>
+          childValueOpt.map { childValue =>
+            elementsAggregator.feed(Input.El(childValue))
+          } getOrElse {
+            elementsAggregator
+          }
         }
       }
       _ <- skipNonElement
-      parsedElements <- peekOne.flatMap {
-        case x: EndElement => Iteratee.flatten(extractValue(fedAggregator).map(a => Done[XMLEvent, A](a)))
+      parsedElements <- peekOne[XMLEvent].flatMap {
+        case x: EndElement =>
+          drop(1).flatMap { _ =>
+            fedAggregator.run.map(a => Done[XMLEvent, A](a)).recover({ case NonFatal(e) => Error[XMLEvent](e, Input.Empty)}).get
+          }
         case x: StartElement =>
           //call ourselves recursively to parse the next child element
           childElements(fedAggregator, elementHandlerProducer)
-        case x => Error(s"Unexpected event $x", Input.Empty)
+        case x => Error(new IterateeException(s"Unexpected event $x"), Input.Empty)
       }
     } yield parsedElements
 
+  private[this] def childElement[V](elementHandlerProducer: (String, Map[String, String]) => Option[Iteratee[XMLEvent, V]]): Iteratee[XMLEvent, Option[V]] = {
+    peekOne.flatMap {
+      case StartElement(name, attrs) =>
+        elementHandlerProducer(name, attrs).map { handler =>
+          handler.map(x => Some(x))
+        } getOrElse {
+          //if there's no handler, consume the element and return None
+          ignoreElement.map(x => None)
+        }
+      case x => Error(new IterateeException(s"Expected StartElement, got $x instead"), Input.Empty)
+    }
+  }
 
-  def parseObject[V](childHandlers: (String, Iteratee[XMLEvent, V])*)(implicit ec: ExecutionContext): Enumeratee[XMLEvent, V] =
+  def parseObject[V](childHandlers: (String, Iteratee[XMLEvent, V])*): Enumeratee[XMLEvent, V] =
     parseObject(Map(childHandlers: _*))
 
-  def parseObject[V](childHandlers: Map[String, Iteratee[XMLEvent, V]])(implicit ec: ExecutionContext): Enumeratee[XMLEvent, V] =
+  def parseObject[V](childHandlers: Map[String, Iteratee[XMLEvent, V]]): Enumeratee[XMLEvent, V] =
     parseObject { (name, attrs) =>
+      //logger.debug("Getting entry for {}", name)
       childHandlers.get(name)
     }
+
+  type PF[V] = PartialFunction[(String, Map[String, String]), Iteratee[XMLEvent, V]]
+  def parser[V](pf: PF[V]) = Function.untupled(pf.lift)
+  def parseObject[V](pf: PF[V]): Enumeratee[XMLEvent, V] = parseObject(parser(pf))
+
+
 
   /**
    * Transforms a stream of XMLEvent to a stream of A.
@@ -88,33 +106,16 @@ object ObjectParser {
    * element in place and then discard the input.
    *
    */
-  def parseObject[V](childHandlerProducer: (String, Map[String, String]) => Option[Iteratee[XMLEvent, V]])(implicit ec: ExecutionContext): Enumeratee[XMLEvent, V] = new Enumeratee[XMLEvent, V] {
+  def parseObject[V](childHandlerProducer: (String, Map[String, String]) => Option[Iteratee[XMLEvent, V]]): Enumeratee[XMLEvent, V] = new Enumeratee[XMLEvent, V] {
 
     def step[A](inner: Iteratee[V, A])(in: Input[V]): Iteratee[V, Iteratee[V, A]] = in match {
-      case EOF => Done(inner, in)
-      case _ => Cont(step(Iteratee.flatten(inner.feed(in))))
+      case Input.EOF => Done(inner, in)
+      case _ => Cont(step(inner.feed(in)))
     }
 
     def applyOn[A](inner: Iteratee[V, A]): Iteratee[XMLEvent, Iteratee[V, A]] = {
       xmlObject(Cont(step(inner)), childHandlerProducer)
     }
   }
-
-
-  //A variant on Iteratee.run that does not directly throw exceptions, but rather complete the future with failures
-  private def extractValue[A, B](it: Iteratee[A, B])(implicit ec: ExecutionContext): Future[B] = {
-    it.fold {
-      case Step.Cont(k) =>
-        //if it's not done, send an EOF and hope that it finishes after that
-        k(Input.EOF).fold {
-          case Step.Cont(_) => Future.failed(new RuntimeException("Expected valuesHandler Iteratee to complete after EOF."))
-          case Step.Done(x, _) => Future.successful(x)
-          case Step.Error(msg, _) => Future.failed(new RuntimeException(msg))
-        }
-      case Step.Done(x, _) => Future.successful(x)
-      case Step.Error(msg, _) => Future.failed(new RuntimeException(msg))
-    }
-  }
-
 
 }

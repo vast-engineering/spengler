@@ -5,6 +5,8 @@ import org.scalatest.WordSpec
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import javax.xml.stream.XMLStreamException
+import org.apache.commons.io.IOUtils
+import com.vast.util.iteratee.Iteratee
 
 /**
  *
@@ -38,24 +40,25 @@ class TreeParserTest extends WordSpec with AsyncSupport with Logging {
   )
 
   "The Async XML parser" should {
+
     "properly parse XML" in {
       val it = xmlDocument
-      val parser = InputHandlers.asyncParser(it)
+
       expectResult(goodBytesParsed) {
-        blockOnResult(parser(asyncFeedInput(goodBytes)))
+        blockOnResult(asyncFeedInput(goodBytes, it))
       }
     }
 
     "Properly signal errors for invalid XML" in {
       val it = xmlDocument
-      val parser = InputHandlers.asyncParser(it)
       intercept[XMLStreamException] {
-        blockOnResult(parser(asyncFeedInput(badBytes)))
+        blockOnResult(asyncFeedInput(badBytes, it))
       }
     }
   }
 
   "The sync XML parser" should {
+
     "properly parse XML" in {
       val it = xmlDocument
       val parser = InputHandlers.syncParser(it)
@@ -70,6 +73,13 @@ class TreeParserTest extends WordSpec with AsyncSupport with Logging {
         blockOnResult(parser(badBytes))
       }
     }
+    "parse a large XML document" in {
+      //val input = classOf[TreeParserTest].getResourceAsStream("/largeResponse.xml")
+      val bytes = IOUtils.toByteArray(classOf[TreeParserTest].getResourceAsStream("/largeResponse.xml"))
+      val parser = InputHandlers.syncParser(xmlDocument)
+      blockOnResult(parser(bytes))
+    }
+
 
   }
 
@@ -77,10 +87,9 @@ class TreeParserTest extends WordSpec with AsyncSupport with Logging {
     "return the same result" in {
       val it = xmlDocument
       val syncParser = InputHandlers.syncParser(it)
-      val asyncParser = InputHandlers.asyncParser(it)
 
       val eventuallyResult = Future.sequence(List[Future[XMLNode]](
-        asyncParser(asyncFeedInput(goodBytes)),
+        asyncFeedInput(goodBytes, it),
         syncParser(goodBytes)
       )).map { results =>
         assert(results.size === 2)
