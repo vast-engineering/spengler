@@ -56,7 +56,7 @@ class ObjectParserTest extends WordSpec with AsyncSupport with Logging {
     }
 
     "parse a complex document" in {
-      val bytes = IOUtils.toByteArray(classOf[TreeParserTest].getResourceAsStream("/largeResponse.xml"))
+      val bytes = IOUtils.toByteArray(classOf[TreeParserTest].getResourceAsStream("/complexResponse.xml"))
       logger.debug("Starting parse")
       Console.println(blockOnResult(asyncFeedInput(bytes, CarsResultIteratee.carsResultIteratee)))
       logger.debug("ending parse")

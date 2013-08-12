@@ -6,10 +6,12 @@
     <version>0.1.0-SNAPSHOT</version>
     <packaging>scala-jar</packaging>
 
-    <name>Async XML Client</name>
-    <description>Async XML Client</description>
+    <name>Spengler</name>
+    <description>Spengler XML stream processing library</description>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
         <!-- ensure both java and scala compiler emit 1.6 bytecode -->
         <maven.compiler.source>1.6</maven.compiler.source>
         <maven.compiler.target>1.6</maven.compiler.target>

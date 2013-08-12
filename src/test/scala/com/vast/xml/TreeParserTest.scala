@@ -74,8 +74,7 @@ class TreeParserTest extends WordSpec with AsyncSupport with Logging {
       }
     }
     "parse a large XML document" in {
-      //val input = classOf[TreeParserTest].getResourceAsStream("/largeResponse.xml")
-      val bytes = IOUtils.toByteArray(classOf[TreeParserTest].getResourceAsStream("/largeResponse.xml"))
+      val bytes = IOUtils.toByteArray(classOf[TreeParserTest].getResourceAsStream("/complexResponse.xml"))
       val parser = InputHandlers.syncParser(xmlDocument)
       blockOnResult(parser(bytes))
     }

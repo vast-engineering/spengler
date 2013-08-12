@@ -12,7 +12,7 @@ import concurrent.ExecutionContext.Implicits.global
  * @author David Pratt (dpratt@vast.com)
  */
 trait AsyncSupport {
-  "foo".toCharArray
+
   /**
    * Asynchronously feed the input, one byte at a time, into the Channel.
    */
