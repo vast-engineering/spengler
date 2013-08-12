@@ -3,9 +3,4 @@
 *.ipr
 *.iml
 
-.classpath
-.project
-
 target
-
-overlays

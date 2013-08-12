@@ -45,7 +45,7 @@ trait Enumerator[E] {
    * from another Enumerator.
    */
   def andThen(e: Enumerator[E])(implicit ec: ExecutionContext): Enumerator[E] = new Enumerator[E] {
-    def apply[A](i: Iteratee[E, A]): Future[Iteratee[E, A]] = parent.apply(i).flatMap(e.apply) //bad implementation, should remove Input.EOF in the end of first
+    def apply[A](i: Iteratee[E, A]): Future[Iteratee[E, A]] = parent.apply(i).flatMap(e.apply)
   }
 
 

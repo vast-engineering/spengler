@@ -2,10 +2,11 @@ package com.vast.xml
 
 import org.scalatest.WordSpec
 import com.typesafe.scalalogging.slf4j.Logging
-import scala.concurrent.ExecutionContext.Implicits.global
 import org.apache.commons.io.IOUtils
 import scala.concurrent.ExecutionContext
-import play.api.libs.json.{JsObject, Reads, JsValue}
+import play.api.libs.json.JsObject
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.vast.util.iteratee._
 
@@ -13,7 +14,6 @@ class ObjectParserTest extends WordSpec with AsyncSupport with Logging {
 
   import ObjectParser._
   import Iteratees._
-
 
   "The object parser" should {
 

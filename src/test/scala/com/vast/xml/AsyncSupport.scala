@@ -3,7 +3,7 @@ package com.vast.xml
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
-import com.vast.util.iteratee.{Input, Iteratee, Enumerator}
+import com.vast.util.iteratee.Iteratee
 
 import concurrent.ExecutionContext.Implicits.global
 

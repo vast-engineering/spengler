@@ -6,8 +6,6 @@ import com.typesafe.scalalogging.slf4j.Logging
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 /**
  *
  * @author David Pratt (dpratt@vast.com)
