@@ -126,6 +126,9 @@ object Iteratee {
   def foreach[E](f: E => Unit): Iteratee[E, Unit] = fold[E, Unit](())((_, e) => f(e))
 }
 
+/**
+ * Defines the three states that any Iteratee can be in.
+ */
 sealed trait Step[E, +A] {
   lazy val it: Iteratee[E, A] = this match {
     case Step.Done(a, e) => Done(a, e)
@@ -134,15 +137,18 @@ sealed trait Step[E, +A] {
   }
 }
 
-/**
- * Defines the three states that any Iteratee can be in.
- */
 object Step {
   case class Done[+A, E](a: A, remaining: Input[E]) extends Step[E, A]
   case class Cont[E, +A](k: Input[E] => Iteratee[E, A]) extends Step[E, A]
   case class Error[E](msg: Throwable, input: Input[E]) extends Step[E, Nothing]
 }
 
+/**
+ * Represents a single chunk of input to an [[com.vast.util.iteratee.Iteratee]]. An input can be one of three types -
+ *  i. A valid chunk, represented by [[com.vast.util.iteratee.Input.El]]
+ *  i. An empty chunk, represented by [[com.vast.util.iteratee.Input.Empty]]
+ *  i. EOF, represented by [[com.vast.util.iteratee.Input.EOF]]
+ */
 sealed trait Input[+E] {
   def map[U](f: (E => U)): Input[U] = this match {
     case Input.El(e) => Input.El(f(e))

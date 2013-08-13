@@ -1,13 +1,59 @@
 package com.vast.xml
 
-import com.vast.util.iteratee._
-import Combinators._
 import com.typesafe.scalalogging.slf4j.Logging
-import scala.util.control.NonFatal
+import com.vast.util.iteratee._
 
+/**
+ * A class to incrementally and asynchronously parse an object from a stream of XMLEvents. Traditionally, XML parsing meant one of two things
+ *
+ *  i. Load the entire raw contents of the source XML document into memory, and parse a DOM tree from that. This method makes it easy
+ *    for parsers to be written, but at the cost of memory usage. For very large input documents, this method can become unusable.
+ *  i. Parse the document using the SAX or STaX APIs. This does not require that the entire contents of the input be loaded into memory at once,
+ *    but it does imply that the input source (and parser) must use blocking I/O, since the parser has no way to 'pause' itself and
+ *    offer clients the ability to restart later when more input is available.
+ *
+ * The [[com.vast.xml.ObjectParser]] is a nice balance between the two methods above. The top-level interface to this mechanism is through
+ * [[com.vast.xml.ObjectParser.parseObject]].
+ *
+ */
 object ObjectParser extends Logging {
 
+  import scala.util.control.NonFatal
+
   import Iteratees._
+  import Combinators._
+
+  /**
+   * Transforms a stream of XMLEvent to a stream of A.
+   *
+   * This can be used to parse an arbitrary tree of XML. It's assumed that the first XMLEvent received
+   * is the StartElement for the parent tag. The childHandler function takes in info about a child element
+   * and returns an Iteratee that can parse it.
+   *
+   * This Enumeratee is *very* useful when the input document is very large and the goal is to parse each
+   * element in place and then discard the input.
+   *
+   */
+  def parseObject[V](childHandlerProducer: (String, Map[String, String]) => Option[Iteratee[XMLEvent, V]]): Enumeratee[XMLEvent, V] = new Enumeratee[XMLEvent, V] {
+
+    def step[A](inner: Iteratee[V, A])(in: Input[V]): Iteratee[V, Iteratee[V, A]] = in match {
+      case Input.EOF => Done(inner, in)
+      case _ => Cont(step(inner.feed(in)))
+    }
+
+    def applyOn[A](inner: Iteratee[V, A]): Iteratee[XMLEvent, Iteratee[V, A]] = {
+      xmlObject(Cont(step(inner)), childHandlerProducer)
+    }
+  }
+
+  def parseObject[V](childHandlers: (String, Iteratee[XMLEvent, V])*): Enumeratee[XMLEvent, V] =
+    parseObject(Map(childHandlers: _*))
+
+  def parseObject[V](childHandlers: Map[String, Iteratee[XMLEvent, V]]): Enumeratee[XMLEvent, V] =
+    parseObject { (name, attrs) =>
+      childHandlers.get(name)
+    }
+
 
   def required[A](it: Iteratee[XMLEvent, Option[A]]) = {
     it.flatMap { value =>
@@ -79,43 +125,4 @@ object ObjectParser extends Logging {
       case x => Error(new IterateeException(s"Expected StartElement, got $x instead"), Input.Empty)
     }
   }
-
-  def parseObject[V](childHandlers: (String, Iteratee[XMLEvent, V])*): Enumeratee[XMLEvent, V] =
-    parseObject(Map(childHandlers: _*))
-
-  def parseObject[V](childHandlers: Map[String, Iteratee[XMLEvent, V]]): Enumeratee[XMLEvent, V] =
-    parseObject { (name, attrs) =>
-      //logger.debug("Getting entry for {}", name)
-      childHandlers.get(name)
-    }
-
-  type PF[V] = PartialFunction[(String, Map[String, String]), Iteratee[XMLEvent, V]]
-  def parser[V](pf: PF[V]) = Function.untupled(pf.lift)
-  def parseObject[V](pf: PF[V]): Enumeratee[XMLEvent, V] = parseObject(parser(pf))
-
-
-
-  /**
-   * Transforms a stream of XMLEvent to a stream of A.
-   *
-   * This can be used to parse an arbitrary tree of XML. It's assumed that the first XMLEvent received
-   * is the StartElement for the parent tag. The childHandler function takes in info about a child element
-   * and returns an Iteratee that can parse it.
-   *
-   * This Enumeratee is *very* useful when the input document is very large and the goal is to parse each
-   * element in place and then discard the input.
-   *
-   */
-  def parseObject[V](childHandlerProducer: (String, Map[String, String]) => Option[Iteratee[XMLEvent, V]]): Enumeratee[XMLEvent, V] = new Enumeratee[XMLEvent, V] {
-
-    def step[A](inner: Iteratee[V, A])(in: Input[V]): Iteratee[V, Iteratee[V, A]] = in match {
-      case Input.EOF => Done(inner, in)
-      case _ => Cont(step(inner.feed(in)))
-    }
-
-    def applyOn[A](inner: Iteratee[V, A]): Iteratee[XMLEvent, Iteratee[V, A]] = {
-      xmlObject(Cont(step(inner)), childHandlerProducer)
-    }
-  }
-
 }

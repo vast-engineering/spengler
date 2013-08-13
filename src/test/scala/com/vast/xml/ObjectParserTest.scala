@@ -3,12 +3,9 @@ package com.vast.xml
 import org.scalatest.WordSpec
 import com.typesafe.scalalogging.slf4j.Logging
 import org.apache.commons.io.IOUtils
-import scala.concurrent.ExecutionContext
-import play.api.libs.json.JsObject
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.vast.util.iteratee._
+import scala.xml.NodeSeq
 
 class ObjectParserTest extends WordSpec with AsyncSupport with Logging {
 
@@ -58,17 +55,27 @@ class ObjectParserTest extends WordSpec with AsyncSupport with Logging {
     "parse a complex document" in {
       val bytes = IOUtils.toByteArray(classOf[TreeParserTest].getResourceAsStream("/complexResponse.xml"))
       logger.debug("Starting parse")
-      Console.println(blockOnResult(asyncFeedInput(bytes, CarsResultIteratee.carsResultIteratee)))
+      Console.println(blockOnResult(asyncFeedInput(bytes, ComplexObjectParser.parser)))
       logger.debug("ending parse")
     }
   }
 }
 
 
-object CarsResultIteratee {
+object ComplexObjectParser {
 
-  case class SearchResult(count: Int = 0, listings: Seq[JsObject] = Seq())
-  case class Listing(id: String = "")
+  case class ComplexObject(count: Int = 0, children: Seq[Entry] = Seq())
+
+  case class Entry(id: String, name: String, price: Int)
+  object Entry {
+    def apply(ns: NodeSeq): Entry = {
+
+      val id = (ns \ "id").text
+      val name = (ns \ "name").text
+      val price = (ns \ "price").text.toInt
+      Entry(id, name, price)
+    }
+  }
 
   import ObjectParser._
   import Iteratees._
@@ -76,9 +83,9 @@ object CarsResultIteratee {
   type Updater[Result] = Result => Result
   type ValueUpdater[Result, V] = V => (Result => Result)
 
-  def carsResultIteratee(implicit ec: ExecutionContext) = document(resultParser)
+  def parser = document(resultParser)
 
-  private[this] def producer[T](value: T) = {
+  private[this] def producer[T](value: => T) = {
     Iteratee.fold[Updater[T], T](value) {
       case (result, updater) => updater(result)
     }
@@ -86,8 +93,9 @@ object CarsResultIteratee {
 
   private[this] def resultParser =
     parseObject(
-      "totalResults" -> xmlNumber.map(value => { res: SearchResult => res.copy(count = value.get.toInt) }),
-      "entry" -> JsValueParser.jsonObject.map(value => (res: SearchResult) => res.copy(listings = res.listings :+ value))
-    ).transform(producer(SearchResult()))
+      "totalResults" -> xmlNumber.map(value => { res: ComplexObject => res.copy(count = value.get.toInt) }),
+      "entry" -> NodeSeqParser.parseNodeSeq.map(Entry(_)).map(value => (res: ComplexObject) => res.copy(children = res.children :+ value))
+    ).transform(producer(ComplexObject()))
+
 
 }

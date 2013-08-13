@@ -12,6 +12,8 @@ import com.typesafe.scalalogging.slf4j.Logging
 import scala.util.control.NonFatal
 
 /**
+ * A set of [[com.vast.util.iteratee.Enumerator]]s and [[com.vast.util.iteratee.Enumeratee]]s that assist with parsing
+ * streams of Bytes into [[com.vast.xml.XMLEvent]]s.
  *
  * @author David Pratt (dpratt@vast.com)
  */
@@ -88,7 +90,9 @@ object InputHandlers extends Logging {
             Cont(step(it, parser))
           case Input.EOF =>
             parser.getInputFeeder.endOfInput()
-            Done(runIteratee(it, parser))
+            val res = Done[Array[Byte], Iteratee[XMLEvent, A]](runIteratee(it, parser))
+            parser.close()
+            res
           case Input.El(bytes) =>
             parser.getInputFeeder.feedInput(bytes, 0, bytes.length)
             //run the inner

@@ -5,7 +5,8 @@ import com.typesafe.scalalogging.slf4j.Logging
 
 /**
  * A set of [[com.vast.util.iteratee.Iteratee]]s that can parse a stream of [[com.vast.xml.XMLEvent]]s into
- * a tree of Node instances.
+ * a tree of Node instances. This is intended to be a very lightweight representation of the root element in-memory - if you
+ * need more complex behavior, please use the NodeSeqParser.
  *
  */
 object TreeParser extends Logging {

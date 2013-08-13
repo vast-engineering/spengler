@@ -19,7 +19,25 @@
         <scala.major.version>2.10</scala.major.version>
         <scala.minor.version>2</scala.minor.version>
         <scala.version>${scala.major.version}.${scala.minor.version}</scala.version>
+
+        <!-- override these in your local settings.xml -->
+        <release.repo.id>UNDEFINED</release.repo.id>
+        <release.repo.url>UNDEFINED</release.repo.url>
+        <snapshot.repo.id>UNDEFINED</snapshot.repo.id>
+        <snapshot.repo.url>UNDEFINED</snapshot.repo.url>
+
     </properties>
+
+    <distributionManagement>
+        <repository>
+            <id>${release.repo.id}</id>
+            <url>${release.repo.url}</url>
+        </repository>
+        <snapshotRepository>
+            <id>${snapshot.repo.id}</id>
+            <url>${snapshot.repo.url}</url>
+        </snapshotRepository>
+    </distributionManagement>
 
     <dependencies>
 
@@ -51,19 +69,6 @@
             <groupId>org.scala-stm</groupId>
             <artifactId>scala-stm_${scala.major.version}</artifactId>
             <version>0.7</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.typesafe.play</groupId>
-            <artifactId>play-json_${scala.major.version}</artifactId>
-            <version>2.2.0-M1</version>
-            <exclusions>
-                <!-- exclude scala stm -->
-                <exclusion>
-                    <groupId>org.scala-stm</groupId>
-                    <artifactId>scala-stm_2.10.0</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <!-- test deps -->
@@ -111,6 +116,14 @@
                         <arg>-feature</arg>
                     </args>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>doc-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- publish sources along with binaries -->
@@ -120,6 +133,7 @@
                 <version>2.2.1</version>
                 <executions>
                     <execution>
+                        <id>attach-sources</id>
                         <goals>
                             <goal>jar</goal>
                         </goals>
