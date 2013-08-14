@@ -10,6 +10,14 @@ import scala.util.{Success, Failure, Try}
  * suitable to use if you do not require async behavior on a step - namely, the feed operation returns an Iteratee directly, not
  * a Future[Iteratee]. If you require this behavior, consider using the Play version instead.
  *
+ * An Iteratee is an object that represents the state of computation across a stream of input. At every step, an Iteratee can be in
+ * one of three states - Cont, Done, or Error. Done signifies that the Iteratee has completed it's computation and the result can
+ * be extracted. Error denotes that a problem has been encountered, and Cont means that the Iteratee has not yet finished.
+ *
+ * The general pattern of usage for an Iteratee is to incrementally feed it input using the feed() method. Feed takes an input
+ * and returns a new Iteratee with an updated state. You can then query this new iteratee to see if it's finished (Done or Error)
+ * or is waiting for more input (Cont).
+ *
  * @author dpratt@vast.com
  */
 trait Iteratee[E, +A] {
