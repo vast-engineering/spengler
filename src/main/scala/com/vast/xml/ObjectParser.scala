@@ -24,7 +24,7 @@ object ObjectParser extends Logging {
   import Combinators._
 
   /**
-   * Transforms a stream of XMLEvent to a stream of A.
+   * Transforms a stream of XMLEvent to a stream of V.
    *
    * This can be used to parse an arbitrary tree of XML. It's assumed that the first XMLEvent received
    * is the StartElement for the parent tag. The childHandler function takes in info about a child element
@@ -106,10 +106,11 @@ object ObjectParser extends Logging {
     valueUpdater { (result: Result, value: Value) => updater(result)(value) }
   }
 
-  //this function will create a new Result and then fold
-  //over each of the results from the parser Enumeratee. Each result of the enumeratee is a
-  //function that sets a property on the result.
-  def producer[Result](initialState: () => Result) = {
+  /**
+   * Returns an iteratee that can take a stream of Updater[Result] functions and apply them to an instance of Result.
+   * When the Iteratee has finished, the Result has had all of the relevant changes parsed from the stream applied to it.
+   */
+  def producer[Result](initialState: () => Result): Iteratee[Updater[Result], Result] = {
     Iteratee.fold[Updater[Result], Result](initialState()) {
       case (result, updater) => updater(result)
     }

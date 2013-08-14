@@ -147,7 +147,7 @@ object InputHandlers extends Logging {
     x.setProperty(XMLInputFactory.IS_VALIDATING, false)
     x.setProperty(XMLInputFactory.SUPPORT_DTD, false)
     x.setProperty(XMLInputFactory2.P_PRESERVE_LOCATION, false)
-    x.setProperty(XMLInputFactory2.P_PRESERVE_LOCATION, false)
+    x.setProperty(XMLInputFactory2.P_AUTO_CLOSE_INPUT, true)
     x.configureForSpeed()
     x
   }
