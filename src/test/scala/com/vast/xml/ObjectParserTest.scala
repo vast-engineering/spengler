@@ -80,22 +80,13 @@ object ComplexObjectParser {
   import ObjectParser._
   import Iteratees._
 
-  type Updater[Result] = Result => Result
-  type ValueUpdater[Result, V] = V => (Result => Result)
-
   def parser = document(resultParser)
-
-  private[this] def producer[T](value: => T) = {
-    Iteratee.fold[Updater[T], T](value) {
-      case (result, updater) => updater(result)
-    }
-  }
 
   private[this] def resultParser =
     parseObject(
       "totalResults" -> xmlNumber.map(value => { res: ComplexObject => res.copy(count = value.get.toInt) }),
       "entry" -> NodeSeqParser.parseNodeSeq.map(Entry(_)).map(value => (res: ComplexObject) => res.copy(children = res.children :+ value))
-    ).transform(producer(ComplexObject()))
+    ).transform(producer(() => ComplexObject()))
 
 
 }

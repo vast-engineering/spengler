@@ -26,7 +26,9 @@ trait Enumerator[E] {
    * has not completed or is in the error state after the EOF is fed, the resulting Future will be completed with an error.
    */
   def run[A](i: Iteratee[E, A])(implicit ec: ExecutionContext): Future[A] = apply(i).flatMap { it =>
-    Promise[A]().complete(it.run).future
+    Future {
+      it.run.get
+    }
   }
 
   /**
@@ -58,17 +60,19 @@ object Enumerator extends Logging {
    * input and nothing else. This enumerator will NOT
    * automatically produce Input.EOF after the given input.
    */
-  def enumInput[E](e: Input[E]) = new Enumerator[E] {
+  def enumInput[E](e: Input[E])(implicit ec: ExecutionContext) = new Enumerator[E] {
     def apply[A](i: Iteratee[E, A]): Future[Iteratee[E, A]] =
-      Future.successful(i.feed(e))
+      Future {
+        i.feed(e)
+      }
   }
 
   /**
    * Enumerate an iterable.
    */
-  def enumIterable[E](e: Iterable[E]) = new Enumerator[E] {
+  def enumIterable[E](e: Iterable[E])(implicit ec: ExecutionContext) = new Enumerator[E] {
     def apply[A](i: Iteratee[E, A]): Future[Iteratee[E, A]] = {
-      try {
+      Future {
         var it = i
         val iterator = e.iterator
         var done = false
@@ -76,9 +80,7 @@ object Enumerator extends Logging {
           it = it.feed(Input.El(iterator.next()))
           done = it.isDoneOrError
         }
-        Future.successful(it)
-      } catch {
-        case NonFatal(t) => Future.failed(t)
+        it
       }
     }
   }
@@ -86,7 +88,7 @@ object Enumerator extends Logging {
   /**
    * An enumerator that feeds EOF and nothing else.
    */
-  def eof[A] = enumInput[A](Input.EOF)
+  def eof[A](implicit ec: ExecutionContext) = enumInput[A](Input.EOF)
 
   /**
    * An Enumerator that allows calculation of the next input at each state. This enumerator takes an initial state,
@@ -94,9 +96,9 @@ object Enumerator extends Logging {
    * the Enumerator will stop. Note - this Enumerator will *NOT* feed EOF when the input function signals the end of input.
    *
    */
-  def unfold[S, E](s: S)(f: S => Option[(S, E)]): Enumerator[E] = new Enumerator[E] {
+  def unfold[S, E](s: S)(f: S => Option[(S, E)])(implicit ec: ExecutionContext): Enumerator[E] = new Enumerator[E] {
     def apply[A](i: Iteratee[E, A]): Future[Iteratee[E, A]] = {
-      try {
+      Future {
         //could make this tailrec, but iteration is easier, easier to understand, and slightly faster
         var done = false
         var state = s
@@ -111,9 +113,7 @@ object Enumerator extends Logging {
             done = true
           }
         }
-        Future.successful(it)
-      } catch {
-        case NonFatal(e) => Future.failed(e)
+        it
       }
     }
   }

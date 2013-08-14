@@ -2,6 +2,7 @@ package com.vast.xml
 
 import com.typesafe.scalalogging.slf4j.Logging
 import com.vast.util.iteratee._
+import scala.annotation.tailrec
 
 /**
  * A set of low-level [[com.vast.util.iteratee.Iteratee]]s designed to help parse raw XML event streams.
@@ -14,58 +15,53 @@ object Iteratees extends Logging {
 
   def ignoreElement: Iteratee[XMLEvent, Unit] = {
 
-    def step: Iteratee[XMLEvent, Unit] = takeOne.flatMap {
-      case x@StartElement(_, _) => ignoreElement.feed(Input.El(x)).flatMap(x => step)
-      case EndElement(name) => Done(Unit, Input.Empty)
-      case _ => step
+    def step(depth: Int): Iteratee[XMLEvent, Unit] = Cont {
+      case Input.El(event) => event match {
+        case x: StartElement => step(depth + 1)
+        case x: EndElement =>
+          val newDepth = depth - 1
+          if(newDepth == 0) {
+            Done(Unit, Input.Empty)
+          } else {
+            step(newDepth)
+          }
+        case _ => step(depth)
+      }
+      case Input.EOF =>
+        Error(new IterateeException("Unexpected EOF in ignoreElement"), Input.Empty)
+      case Input.Empty => step(depth)
     }
-    expectStartElement.flatMap { startElem =>
-      step
-    }
+
+    for {
+      startElem <- expectStartElement
+      res <- step(1)
+    } yield res
   }
 
   /**
    * Return an Iteratee that will accept a StartElement event. The result
    * of the Iteratee will be the matched element.
    */
-  def expectStartElement = expect[XMLEvent, StartElement] {
-    case x@StartElement(_, _) => Right(x)
-    case x => Left(s"Expected StartElement, got $x instead.")
+  def expectStartElement = expect[XMLEvent](_.isInstanceOf[StartElement]).map(_.asInstanceOf[StartElement])
+
+  def expectEndElement = expect[XMLEvent](_.isInstanceOf[EndElement]).map(_.asInstanceOf[EndElement])
+
+  def skipToNextStartOrEnd: Iteratee[XMLEvent, XMLEvent] = Cont {
+    case Input.El(event) => if( event.isInstanceOf[StartElement] || event.isInstanceOf[EndElement] ) Done(event) else skipToNextStartOrEnd
+    case Input.EOF => Error(new IterateeException("Expected StartElement or EndElement, got EOF instead."), Input.Empty)
+    case _ => skipToNextStartOrEnd
   }
 
-  def expectEndElement = expect[XMLEvent, EndElement] {
-    case x@EndElement(_) => Right(x)
-    case x => Left(s"Expected EndElement, got $x instead.")
-  }
+  def expectStartDoc = expect[XMLEvent](_ == StartDocument)
 
-  def skipNonElement = {
-    dropWhile[XMLEvent] {
-      case x: StartElement => false
-      case x: EndElement => false
-      case _ => true
-    }
-  }
+  def expectEndDoc = expect[XMLEvent](_ == EndDocument)
 
-  def expectStartDoc = expect[XMLEvent, StartDocument.type] {
-    case x@StartDocument => Right(x)
-    case x => Left(s"Expected a StartDocument, got $x instead.")
-  }
-
-  def expectEndDoc = expect[XMLEvent, EndDocument.type] {
-    case x@EndDocument =>
-      Right(x)
-    case x =>
-      Left(s"Expected a EndDocument, got $x instead.")
-  }
-
-  def document[A](bodyContentHandler: Iteratee[XMLEvent, A]): Iteratee[XMLEvent, A] = {
-    expectStartDoc.flatMap { startDoc =>
-      bodyContentHandler.flatMap { body =>
-        expectEndDoc.flatMap { endDoc =>
-          Done[XMLEvent, A](body, Input.Empty)
-        }
-      }
-    }
+  def document[A](bodyContentHandler: Iteratee[XMLEvent, A]): Iteratee[XMLEvent, A] = for {
+    _ <- expectStartDoc
+    body <- bodyContentHandler
+    _ <- expectEndDoc
+  } yield {
+    body
   }
 
   def textOnly: Iteratee[XMLEvent, Option[String]] = {
@@ -75,7 +71,7 @@ object Iteratees extends Logging {
         case Input.EOF =>
           Error(new IterateeException("Unexpected EOF."), Input.EOF)
         case Input.Empty => step(text)
-        case in@Input.El(event) =>
+        case Input.El(event) =>
           event match {
             //parse text
             case Characters(data) =>

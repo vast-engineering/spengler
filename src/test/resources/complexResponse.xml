@@ -4,20 +4,24 @@
         <id>1</id>
         <name>First</name>
         <price>34000</price>
+        <ignored>should be ignored</ignored>
     </entry>
     <entry>
         <id>2</id>
         <name>Second</name>
         <price>34000</price>
+        <ignored>should be ignored</ignored>
     </entry>
     <entry>
         <id>3</id>
         <name>Third</name>
         <price>34000</price>
+        <ignored>should be ignored</ignored>
     </entry>
     <entry>
         <id>4</id>
         <name>Fourth</name>
         <price>34000</price>
+        <ignored>should be ignored</ignored>
     </entry>
 </feed>

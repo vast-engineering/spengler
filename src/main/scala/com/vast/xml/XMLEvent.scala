@@ -45,7 +45,7 @@ object XMLEvent extends Logging {
   def startElement(reader: XMLStreamReader) = {
     val attrCount = reader.getAttributeCount
     var idx = 0
-    //java hashmaps are still faster than Scala's - use it here
+//    java hashmaps are still faster than Scala's - use it here
     val attrs = new java.util.HashMap[String, String]()
     while (idx < attrCount) {
       attrs.put(reader.getAttributeLocalName(idx), reader.getAttributeValue(idx))

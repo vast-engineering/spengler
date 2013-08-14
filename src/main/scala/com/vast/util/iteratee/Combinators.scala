@@ -24,17 +24,15 @@ object Combinators {
   }
 
   def takeOne[A]: Iteratee[A, A] = Cont {
-    case in@Input.El(event) => Done(event)
-    case in@Input.EOF =>
-      Error(new IterateeException("Unexpected EOF in takeOne"), Input.Empty)
+    case Input.El(event) => Done(event)
+    case Input.EOF => Error(new IterateeException("Unexpected EOF in takeOne"), Input.Empty)
     case Input.Empty => takeOne
   }
 
   def peekOne[A]: Iteratee[A, A] = Cont {
     case in@Input.El(event) => Done(event, in)
     case Input.Empty => peekOne
-    case in@Input.EOF =>
-      Error(new IterateeException("Unexpected EOF in peekOne"), Input.Empty)
+    case Input.EOF => Error(new IterateeException("Unexpected EOF in peekOne"), Input.Empty)
   }
 
   def drop[A](n: Int): Iteratee[A, Unit] =
@@ -50,23 +48,16 @@ object Combinators {
       }
     }
 
-
-  type ScanResult[A] = Either[String, A]
-  type Scanner[A, B] = A => ScanResult[B]
-
-  def scanner[A, B](f: A => ScanResult[B]): Scanner[A, B] = {
-    f
-  }
-
   /**
    * An interatee that consumes the current token iff it satisfies the supplied scanner. The result
    * of the iteratee will be the value resulting from the scanner.
    */
-  def expect[A, B](f: Scanner[A, B]): Iteratee[A, B] = takeOne.flatMap { event =>
-    f(event).fold(
-      message => Error(new IterateeException(message), Input.Empty),
-      x => Done(x)
-    )
+  def expect[A](f: A => Boolean): Iteratee[A, A] = takeOne.flatMap { event =>
+    if(!f(event)) {
+      Error(new IterateeException("Missing expected value."), Input.Empty)
+    } else {
+      Done(event)
+    }
   }
 
 }

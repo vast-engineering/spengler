@@ -17,7 +17,7 @@ trait AsyncSupport {
    * Asynchronously feed the input, one byte at a time, into the Channel.
    */
   def asyncFeedInput[A](bytes: Array[Byte], it: Iteratee[XMLEvent, A]): Future[A] = {
-    val (channel, result) = InputHandlers.asyncParser(it)
+    val (channel, result) = InputHandlers.asyncParser(InputHandlers.asyncTransformInput.transform(it))
     Future {
       channel.push(bytes)
 //      bytes.foreach { byte =>

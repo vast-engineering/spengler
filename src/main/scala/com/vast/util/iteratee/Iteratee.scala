@@ -35,10 +35,7 @@ trait Iteratee[E, +A] {
         case Step.Cont(k) => k(e)
         case Step.Error(msg, remaining) => Error(msg, remaining)
       }
-      case Step.Cont(k) =>
-        Cont((in: Input[E]) => {
-          k(in).flatMap(f)
-        })
+      case Step.Cont(k) => Cont(in => k(in).flatMap(f))
       case Step.Error(msg, e) => Error(msg, e)
     }
   }
@@ -72,9 +69,9 @@ trait Iteratee[E, +A] {
         case Step.Cont(nextState) => nextState(Input.EOF).flatFold[E, AIn] {
           case Step.Done(innerValue, _) => Done(innerValue, Input.Empty)
           case Step.Cont(_) => Error(new IterateeException("divergent inner iteratee on joinI after EOF"), Input.EOF)
-          case Step.Error(t, e) => Error(t, Input.Empty)
+          case Step.Error(t, _) => Error(t, Input.Empty)
         }
-        case Step.Error(t, e) => Error(t, Input.Empty)
+        case Step.Error(t, _) => Error(t, Input.Empty)
       }
     }
   }
@@ -107,13 +104,25 @@ object Iteratee {
    * @param state initial state
    * @param f a function folding the previous state and an input to a new state
    */
-  def fold[E, A](state: A)(f: (A, E) => A): Iteratee[E, A] = {
+  def fold[E, A](state: => A)(f: (A, E) => A): Iteratee[E, A] = {
     def step(s: A)(i: Input[E]): Iteratee[E, A] = i match {
       case Input.EOF => Done(s, Input.EOF)
       case Input.Empty => Cont[E, A](step(s))
       case Input.El(e) => Cont(step(f(s, e)))
     }
     Cont(step(state))
+  }
+
+  /**
+   * Create an iteratee that takes the first element of the stream, if one occurs before EOF
+   */
+  def head[E]: Iteratee[E, Option[E]] = {
+    def step: Input[E] => Iteratee[E, Option[E]] = {
+      case Input.Empty => Cont(step)
+      case Input.EOF => Done(None, Input.EOF)
+      case Input.El(e) => Done(Some(e), Input.Empty)
+    }
+    Cont(step)
   }
 
   /**
