@@ -86,7 +86,7 @@ object ComplexObjectParser {
     parseObject(
       "totalResults" -> xmlNumber.map(value => { res: ComplexObject => res.copy(count = value.get.toInt) }),
       "entry" -> NodeSeqParser.parseNodeSeq.map(Entry(_)).map(value => (res: ComplexObject) => res.copy(children = res.children :+ value))
-    ).transform(producer(() => ComplexObject()))
+    ).transform(updater(ComplexObject()))
 
 
 }

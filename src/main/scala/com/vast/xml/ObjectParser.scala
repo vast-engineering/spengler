@@ -109,9 +109,24 @@ object ObjectParser extends Logging {
   /**
    * Returns an iteratee that can take a stream of Updater[Result] functions and apply them to an instance of Result.
    * When the Iteratee has finished, the Result has had all of the relevant changes parsed from the stream applied to it.
+   *
+   * This is used when the initial state is mutable and a new instance is required for every parse - basically this creates
+   * an Iteratee who's first step is to create a new Result object, and then fold a series up Updater functions across it.
    */
   def producer[Result](initialState: () => Result): Iteratee[Updater[Result], Result] = {
-    Iteratee.fold[Updater[Result], Result](initialState()) {
+    Cont { input: Input[Updater[Result]] =>
+      Done[Updater[Result], Result](initialState(), input)
+    }.flatMap(state => updater(state))
+  }
+
+  /**
+   * An interatee that applies a series of updater functions across an initial state. Note - the initial state
+   * value should be immutable and the updater functions should be pure with no side effects. If this is not true,
+   * please use the producer method instead, which creates a new initial state on every invocation of the initial
+   * Iteratee.
+   */
+  def updater[Result](initialState: Result): Iteratee[Updater[Result], Result] = {
+    Iteratee.fold[Updater[Result], Result](initialState) {
       case (result, updater) => updater(result)
     }
   }

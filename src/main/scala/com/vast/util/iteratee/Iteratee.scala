@@ -112,7 +112,7 @@ object Iteratee {
    * @param state initial state
    * @param f a function folding the previous state and an input to a new state
    */
-  def fold[E, A](state: => A)(f: (A, E) => A): Iteratee[E, A] = {
+  def fold[E, A](state: A)(f: (A, E) => A): Iteratee[E, A] = {
     def step(s: A)(i: Input[E]): Iteratee[E, A] = i match {
       case Input.EOF => Done(s, Input.EOF)
       case Input.Empty => Cont[E, A](step(s))
