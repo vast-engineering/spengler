@@ -1,6 +1,6 @@
 package com.vast.xml
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import com.vast.util.iteratee._
 
 /**
@@ -16,7 +16,7 @@ import com.vast.util.iteratee._
  * [[com.vast.xml.ObjectParser.parseObject]].
  *
  */
-object ObjectParser extends Logging {
+object ObjectParser extends LazyLogging {
 
   import scala.util.control.NonFatal
 

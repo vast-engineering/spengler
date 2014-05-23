@@ -2,7 +2,7 @@ package com.vast.xml
 
 import scala.xml._
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import com.vast.util.iteratee._
 
 /**
@@ -10,7 +10,7 @@ import com.vast.util.iteratee._
  *
  * Note - for now, this parser does *not* support XML namespaces.
  */
-object NodeSeqParser extends Logging {
+object NodeSeqParser extends LazyLogging {
 
   import com.vast.xml.Iteratees._
 
@@ -43,7 +43,7 @@ object NodeSeqParser extends Logging {
               Error(new IterateeException(s"Unexpected EndElement(${end.name}) - only EndElement(${startElementEvent.name} is valid in this position."), Input.Empty)
             } else {
               //add the contained text to the children as a Text node
-              val textChildren = Text(text.toString) :: children
+              val textChildren = Text(text.toString.trim) :: children
               //explicitly do not support XML namespaces
               val node = Elem(null, startElementEvent.name, convertAttrs(startElementEvent), TopScope, minimizeEmpty = false, textChildren: _*)
               Done(node)

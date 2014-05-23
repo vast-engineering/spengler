@@ -1,6 +1,6 @@
 package com.vast.xml
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import javax.xml.stream.XMLStreamConstants._
 import scala.collection.immutable
 import javax.xml.stream.XMLStreamReader
@@ -12,7 +12,7 @@ import javax.xml.stream.XMLStreamReader
 //raw stream reader woud just skip over the bytes in the stream.
 sealed trait XMLEvent
 
-object XMLEvent extends Logging {
+object XMLEvent extends LazyLogging {
 
   def apply(reader: XMLStreamReader): XMLEvent = {
     reader.getEventType match {

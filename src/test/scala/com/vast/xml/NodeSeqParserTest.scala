@@ -1,9 +1,9 @@
 package com.vast.xml
 
 import org.scalatest.WordSpec
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
-class NodeSeqParserTest extends WordSpec with AsyncSupport with Logging {
+class NodeSeqParserTest extends WordSpec with AsyncSupport with LazyLogging {
 
   import NodeSeqParser._
 

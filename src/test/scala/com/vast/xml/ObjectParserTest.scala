@@ -1,13 +1,13 @@
 package com.vast.xml
 
 import org.scalatest.WordSpec
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.commons.io.IOUtils
 
 import com.vast.util.iteratee._
 import scala.xml.NodeSeq
 
-class ObjectParserTest extends WordSpec with AsyncSupport with Logging {
+class ObjectParserTest extends WordSpec with AsyncSupport with LazyLogging {
 
   import ObjectParser._
   import Iteratees._

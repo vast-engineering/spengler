@@ -1,7 +1,7 @@
 //package com.vast.xml
 //
 //import org.scalatest.WordSpec
-//import com.typesafe.scalalogging.slf4j.Logging
+//import com.typesafe.scalalogging.slf4j.LazyLogging
 //
 //import play.api.libs.json._
 //import play.api.libs.functional.syntax._
@@ -10,7 +10,7 @@
 // *
 // * @author David Pratt (dpratt@vast.com)
 // */
-//class JsValueParserTest extends WordSpec with AsyncSupport with Logging {
+//class JsValueParserTest extends WordSpec with AsyncSupport with LazyLogging {
 //
 //  import JsValueParser._
 //  import Iteratees._

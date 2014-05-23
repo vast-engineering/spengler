@@ -17,7 +17,7 @@
         <maven.compiler.target>1.6</maven.compiler.target>
 
         <scala.major.version>2.10</scala.major.version>
-        <scala.minor.version>2</scala.minor.version>
+        <scala.minor.version>4</scala.minor.version>
         <scala.version>${scala.major.version}.${scala.minor.version}</scala.version>
 
         <!-- override these in your local settings.xml -->
@@ -70,15 +70,15 @@
         </dependency>
 
         <dependency>
-            <groupId>com.typesafe</groupId>
-            <artifactId>scalalogging-slf4j_${scala.major.version}</artifactId>
-            <version>1.0.1</version>
+            <groupId>com.typesafe.scala-logging</groupId>
+            <artifactId>scala-logging-slf4j_${scala.major.version}</artifactId>
+            <version>2.1.2</version>
         </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.5</version>
+            <version>1.7.7</version>
         </dependency>
 
         <dependency>
@@ -123,14 +123,14 @@
             <plugin>
                 <groupId>com.vast</groupId>
                 <artifactId>scala-lifecycle-plugin</artifactId>
-                <version>0.3.0</version>
+                <version>0.3.4-SNAPSHOT</version>
                 <extensions>true</extensions>
             </plugin>
 
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
-                <version>3.1.5</version>
+                <version>3.1.6</version>
                 <configuration>
                     <recompileMode>incremental</recompileMode>
                     <args>

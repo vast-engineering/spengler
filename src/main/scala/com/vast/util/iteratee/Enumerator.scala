@@ -3,7 +3,7 @@ package com.vast.util.iteratee
 import scala.concurrent.{Promise, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
 /**
  * An Enumerator will produce a stream of inputs of type E, and feed each one in turn to a given Iteratee. Notably,
@@ -53,7 +53,7 @@ trait Enumerator[E] {
 
 }
 
-object Enumerator extends Logging {
+object Enumerator extends LazyLogging {
 
   /**
    * Creates an enumerator which produces the one supplied

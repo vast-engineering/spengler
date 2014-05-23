@@ -8,7 +8,7 @@ import javax.xml.stream.{XMLStreamReader, XMLInputFactory, Location}
 import com.vast.util.iteratee._
 
 import scala.concurrent.{ExecutionContext, Future}
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.util.control.NonFatal
 import org.codehaus.stax2.{XMLStreamReader2, XMLInputFactory2}
 
@@ -18,7 +18,7 @@ import org.codehaus.stax2.{XMLStreamReader2, XMLInputFactory2}
  *
  * @author David Pratt (dpratt@vast.com)
  */
-object InputHandlers extends Logging {
+object InputHandlers extends LazyLogging {
 
   def syncTransformInput: Enumeratee[Array[Byte], XMLEvent] = new Enumeratee[Array[Byte], XMLEvent] {
     def applyOn[A](inner: Iteratee[XMLEvent, A]): Iteratee[Array[Byte], Iteratee[XMLEvent, A]] = {

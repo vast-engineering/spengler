@@ -1,6 +1,6 @@
 package com.vast.xml
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.scalatest.WordSpec
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -11,7 +11,7 @@ import org.apache.commons.io.IOUtils
  *
  * @author David Pratt (dpratt@vast.com)
  */
-class TreeParserTest extends WordSpec with AsyncSupport with Logging {
+class TreeParserTest extends WordSpec with AsyncSupport with LazyLogging {
 
   import TreeParser._
 

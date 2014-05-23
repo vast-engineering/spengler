@@ -1,7 +1,7 @@
 package com.vast.xml
 
 import com.vast.util.iteratee._
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
 /**
  * A set of [[com.vast.util.iteratee.Iteratee]]s that can parse a stream of [[com.vast.xml.XMLEvent]]s into
@@ -9,7 +9,7 @@ import com.typesafe.scalalogging.slf4j.Logging
  * need more complex behavior, please use the NodeSeqParser.
  *
  */
-object TreeParser extends Logging {
+object TreeParser extends LazyLogging {
 
   import Iteratees._
 

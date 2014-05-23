@@ -6,7 +6,7 @@
 //
 //import com.vast.util.iteratee._
 //import com.vast.xml.TreeParser.Node
-//import com.typesafe.scalalogging.slf4j.Logging
+//import com.typesafe.scalalogging.slf4j.LazyLogging
 //
 ///**
 // * A set of [[com.vast.util.iteratee.Iteratee]]s and [[com.vast.util.iteratee.Enumeratee]]s that can
@@ -17,7 +17,7 @@
 // *
 // * @author David Pratt (dpratt@vast.com)
 // */
-//object JsValueParser extends Logging {
+//object JsValueParser extends LazyLogging {
 //
 //  import Iteratees._
 //  import ObjectParser._
