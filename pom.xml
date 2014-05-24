@@ -3,7 +3,7 @@
 
     <groupId>com.vast</groupId>
     <artifactId>spengler</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1-SNAPSHOT</version>
     <packaging>scala-jar</packaging>
 
     <name>Spengler</name>
@@ -40,7 +40,7 @@
         <url>https://github.com/vast-eng/spengler</url>
         <connection>scm:git:git://github.com/vast-eng/spengler.git</connection>
         <developerConnection>scm:git:git@github.com:vast-eng/spengler.git</developerConnection>
-      <tag>0.2.0</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <developers>
