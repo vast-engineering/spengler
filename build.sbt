@@ -29,3 +29,7 @@ libraryDependencies ++= {
 	  Seq.empty
   }
 }
+
+packageBin in Compile <<= (packageBin in Compile).dependsOn(test in Test)
+
+releaseSettings
