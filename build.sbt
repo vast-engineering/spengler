@@ -2,7 +2,7 @@ organization := "com.vast"
 
 name := "spengler"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.1"
 
 crossScalaVersions := Seq("2.10.4", "2.11.1")
 
@@ -30,6 +30,4 @@ libraryDependencies ++= {
   }
 }
 
-packageBin in Compile <<= (packageBin in Compile).dependsOn(test in Test)
-
-releaseSettings
+//releaseSettings
