@@ -24,7 +24,7 @@ libraryDependencies ++= {
   CrossVersion.partialVersion(scalaVersion.value) match {
     // if scala 2.11+ is used, add dependency on scala-xml module
     case Some((2, scalaMajor)) if scalaMajor >= 11 =>
-      Seq("org.scala-lang.modules" %% "scala-xml" % "1.0.1")
+      Seq("org.scala-lang.modules" %% "scala-xml" % "1.0.2")
     case _ =>
 	  Seq.empty
   }
