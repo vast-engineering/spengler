@@ -12,7 +12,7 @@ libraryDependencies ++=
     "org.slf4j" % "slf4j-api" % "1.7.7",
 	"com.fasterxml" % "aalto-xml" % "0.9.9",
 	"org.scala-stm" %% "scala-stm" % "0.7",
-    "org.scalatest" %% "scalatest" % "2.2.0" % "test",
+    "org.scalatest" %% "scalatest" % "2.2.1" % "test",
     "ch.qos.logback" % "logback-classic" % "1.1.2" % "test",
 	"commons-io" % "commons-io" % "2.4" % "test"
   )
