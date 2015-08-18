@@ -1,6 +1,6 @@
 package com.vast.xml
 
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import com.vast.util.iteratee._
 import scala.annotation.tailrec
 

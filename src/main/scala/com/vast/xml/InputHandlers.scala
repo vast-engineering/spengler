@@ -8,7 +8,7 @@ import javax.xml.stream.{XMLStreamReader, XMLInputFactory, Location}
 import com.vast.util.iteratee._
 
 import scala.concurrent.{ExecutionContext, Future}
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import scala.util.control.NonFatal
 import org.codehaus.stax2.{XMLStreamReader2, XMLInputFactory2}
 

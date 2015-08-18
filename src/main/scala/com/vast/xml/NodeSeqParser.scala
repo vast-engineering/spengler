@@ -2,7 +2,7 @@ package com.vast.xml
 
 import scala.xml._
 
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import com.vast.util.iteratee._
 
 /**

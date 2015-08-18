@@ -1,6 +1,6 @@
 package com.vast.xml
 
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import org.scalatest.WordSpec
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

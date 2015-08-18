@@ -1,7 +1,7 @@
 package com.vast.xml
 
 import org.scalatest.WordSpec
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.IOUtils
 
 import com.vast.util.iteratee._

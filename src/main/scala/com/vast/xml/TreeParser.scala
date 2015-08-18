@@ -1,7 +1,7 @@
 package com.vast.xml
 
 import com.vast.util.iteratee._
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * A set of [[com.vast.util.iteratee.Iteratee]]s that can parse a stream of [[com.vast.xml.XMLEvent]]s into

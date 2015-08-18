@@ -1,6 +1,6 @@
 package com.vast.xml
 
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import javax.xml.stream.XMLStreamConstants._
 import scala.collection.immutable
 import javax.xml.stream.XMLStreamReader

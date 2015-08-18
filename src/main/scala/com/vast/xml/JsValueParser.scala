@@ -6,7 +6,7 @@
 //
 //import com.vast.util.iteratee._
 //import com.vast.xml.TreeParser.Node
-//import com.typesafe.scalalogging.slf4j.LazyLogging
+//import com.typesafe.scalalogging.LazyLogging
 //
 ///**
 // * A set of [[com.vast.util.iteratee.Iteratee]]s and [[com.vast.util.iteratee.Enumeratee]]s that can
